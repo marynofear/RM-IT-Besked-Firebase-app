@@ -1,0 +1,7 @@
+// TODO: your note
+
+//Android Fysisk telefon FCM token:
+dj9flAy5RvO9nT89XaNrnr:APA91bF7gBOmR53R6_mPI94XCwV3tKEY_8wTZX-oUhhbWwcUQz4-ZeiEYAQeDRQw99bkn8GFe7QIp7F3nA0j-hgtAvB9sKrQ806r5ksfdX5iTg7fheVhisc
+
+//Android emulator FCM token:
+cZ0axxlARLeiG0a23pQ7Ne:APA91bGNXlKeT0sWP0U0VNcAiy-0k7V1djx5WhFOGCz0Ob-HAFRjg6sOq0Jzcm9-R2tPFjC23A4t41LFLIjfJgnwESS4Di4IdfGJexM29cILoAAhHjRJIDs
