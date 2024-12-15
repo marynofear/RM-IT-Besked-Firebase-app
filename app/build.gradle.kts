@@ -45,11 +45,18 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-analytics")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    //azure
+    implementation ("com.microsoft.azure:notification-hubs-android-sdk:2.0.0") // Den rigtige. Efter ændring virker det.
+    // implementation ("com.microsoft.azure:notification-hubs-android-sdk-fcm:1.1.4")
+    implementation ("androidx.appcompat:appcompat:1.4.1")
+    implementation ("com.android.volley:volley:1.2.1")
+
+
 }

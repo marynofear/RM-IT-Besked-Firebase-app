@@ -1,3 +1,4 @@
+// MainActivity.kt
 package com.notificationapp
 
 import android.Manifest
@@ -13,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
     private val tag = "MainActivity"
+    private lateinit var notificationHub: NotificationHub
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        notificationHub = NotificationHub(this)
         askNotificationPermission()
     }
 
@@ -55,8 +58,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val token = task.result
-                Log.d(tag, "FCM Token: $token")
-                Toast.makeText(this, "Token: $token", Toast.LENGTH_LONG).show()
+                Log.d(tag, "Got new FCM token")
+                Log.d(tag, "Token length: ${token.length}")
+                Log.d(tag, "Token starts with: ${token.take(10)}...")
+
+                NotificationHub(this).registerWithNotificationHubs(token)
             }
     }
 }

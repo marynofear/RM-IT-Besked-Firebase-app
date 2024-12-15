@@ -41,6 +41,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
             Log.d(TAG, "Message received from: ${remoteMessage.from}")
             Log.d(TAG, "Full message data: ${remoteMessage.data}")
+            Log.d(TAG, "Message ID: ${remoteMessage.messageId}")  // Added this line
 
             remoteMessage.notification?.let { notification ->
                 Log.d(TAG, "Message Notification Title: ${notification.title}")
