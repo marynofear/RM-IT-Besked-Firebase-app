@@ -30,64 +30,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.d(TAG, "onCreate - Intent action: ${intent?.action}")
-        Log.d(TAG, "onCreate - Intent flags: ${intent?.flags}")
-        Log.d(TAG, "onCreate - Intent extras: ${intent?.extras}")
+        Log.d(TAG, "⭐ onCreate - Started")
+        logIntentDetails(intent)
 
         notificationHub = NotificationHub(this)
-        checkNotificationPermission()
 
-        // Handle notification click
-        if (intent?.action == "NOTIFICATION_CLICK") {
-            Log.d(TAG, "onCreate - Processing notification click")
-            handleNotificationData(intent)
-        } else {
-            Log.d(TAG, "onCreate - Regular app launch")
+        if (intent?.action == Intent.ACTION_MAIN) {
+            checkNotificationPermission()
         }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        // Handle notification click when app is in background
-        if (intent?.action == "NOTIFICATION_CLICK") {
-            handleNotificationData(intent)
-        }
+        Log.d(TAG, "⭐ onNewIntent called")
+        logIntentDetails(intent)
+        setIntent(intent)
     }
 
-    private fun handleNotificationData(intent: Intent) {
-        Log.d(TAG, "=== Handle Notification Data Started ===")
-        Log.d(TAG, "Intent action: ${intent.action}")
+    private fun logIntentDetails(intent: Intent?) {
+        Log.d(TAG, "⭐ Intent details:")
+        Log.d(TAG, "⭐ Action: ${intent?.action}")
+        Log.d(TAG, "⭐ Flags: ${intent?.flags}")
+        Log.d(TAG, "⭐ Categories: ${intent?.categories}")
+        Log.d(TAG, "⭐ Extras: ${intent?.extras?.keySet()?.joinToString()}")
 
-        val title = intent.getStringExtra("notification_title")
-        val message = intent.getStringExtra("notification_message")
-
-        Log.d(TAG, "Extracted title: $title")
-        Log.d(TAG, "Extracted message: $message")
-
-        if (title != null && message != null) {
-            Log.d(TAG, "Starting MessageDetailActivity")
-            startActivity(Intent(this, MessageDetailActivity::class.java).apply {
-                putExtra("notification_title", title)
-                putExtra("notification_message", message)
-            })
+        intent?.extras?.keySet()?.forEach { key ->
+            val value = intent.extras?.getString(key) // Using getString instead of get
+            Log.d(TAG, "⭐ Extra[$key]: $value")
         }
     }
-
 
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
                 PackageManager.PERMISSION_GRANTED -> {
-                    Log.d(TAG, "Notification permission already granted")
+                    Log.d(TAG, "⭐ Notification permission already granted")
                     initializeFCM()
                 }
                 else -> {
-                    Log.d(TAG, "Requesting notification permission")
+                    Log.d(TAG, "⭐ Requesting notification permission")
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
@@ -100,12 +85,12 @@ class MainActivity : AppCompatActivity() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
-                    Log.e(TAG, "Fetching FCM registration token failed", task.exception)
+                    Log.e(TAG, "⭐ Fetching FCM registration token failed", task.exception)
                     return@addOnCompleteListener
                 }
 
                 task.result?.let { token ->
-                    Log.d(TAG, "FCM token received: ${token.take(10)}...")
+                    Log.d(TAG, "⭐ FCM token received: ${token.take(10)}...")
                     notificationHub.registerWithNotificationHubs(token)
                 }
             }

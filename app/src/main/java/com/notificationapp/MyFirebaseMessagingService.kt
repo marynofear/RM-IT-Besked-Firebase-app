@@ -20,34 +20,63 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "FCM Service Created")
-        // Create channel at service creation
         createNotificationChannel()
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        Log.d(TAG, "New FCM token received: ${token.take(10)}...")
-
-        try {
-            NotificationHub(applicationContext).registerWithNotificationHubs(token)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to register new token with Azure", e)
-        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "🔔 onMessageReceived triggered")
-        Log.d(TAG, "From: ${remoteMessage.from}")
-        Log.d(TAG, "Data payload: ${remoteMessage.data}")
-        Log.d(TAG, "Notification: ${remoteMessage.notification}")
 
-        // Extract notification data
         val notificationTitle = remoteMessage.notification?.title
         val notificationBody = remoteMessage.notification?.body
 
         if (notificationTitle != null && notificationBody != null) {
             showNotification(notificationTitle, notificationBody)
         }
+    }
+
+    private fun showNotification(title: String, message: String) {
+        Log.d(TAG, "⭐ Building notification with title: $title")
+
+        // Create main activity intent as base
+        val mainIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+
+        // Create detail activity intent
+        val detailIntent = Intent(this, MessageDetailActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            putExtra("notification_title", title)
+            putExtra("notification_message", message)
+        }
+
+        // Create an array of intents for the synthetic back stack
+        val intents = arrayOf(mainIntent, detailIntent)
+
+        // Create pending intent with the synthetic back stack
+        val pendingIntent = PendingIntent.getActivities(
+            this,
+            System.currentTimeMillis().toInt(),
+            intents,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setAutoCancel(true)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .build()
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationId = System.currentTimeMillis().toInt()
+        notificationManager.notify(notificationId, notification)
+        Log.d(TAG, "⭐ Notification shown with ID: $notificationId")
     }
 
     private fun createNotificationChannel() {
@@ -61,42 +90,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 enableLights(true)
                 enableVibration(true)
             }
+
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
             Log.d(TAG, "Notification channel created")
         }
     }
 
-    private fun showNotification(title: String, message: String) {
-        Log.d(TAG, "Building notification for: $title")
-
-        // Create Intent for MessageDetailActivity
-        val intent = Intent(this, MessageDetailActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("notification_title", title)
-            putExtra("notification_message", message)
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d(TAG, "New FCM token received: ${token.take(10)}...")
+        try {
+            NotificationHub(applicationContext).registerWithNotificationHubs(token)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to register new token with Azure", e)
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            System.currentTimeMillis().toInt(),
-            intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setAutoCancel(true)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = System.currentTimeMillis().toInt()
-        notificationManager.notify(notificationId, notification)
-        Log.d(TAG, "Notification shown with ID: $notificationId")
     }
 }
