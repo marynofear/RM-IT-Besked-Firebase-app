@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d(TAG, "⭐ onNewIntent called")
         logIntentDetails(intent)
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "⭐ Extras: ${intent?.extras?.keySet()?.joinToString()}")
 
         intent?.extras?.keySet()?.forEach { key ->
-            val value = intent.extras?.getString(key) // Using getString instead of get
+            val value = intent.extras?.getString(key)
             Log.d(TAG, "⭐ Extra[$key]: $value")
         }
     }

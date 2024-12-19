@@ -1,9 +1,10 @@
 package com.notificationapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 
 class MessageDetailActivity : AppCompatActivity() {
@@ -13,33 +14,48 @@ class MessageDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTheme(R.style.Theme_NotificationApp)
         setContentView(R.layout.activity_message_detail)
 
         Log.d(TAG, "⭐ onCreate - Started")
-        Log.d(TAG, "⭐ Intent extras: ${intent?.extras}")
 
-        val title = intent?.getStringExtra("notification_title")
-        val message = intent?.getStringExtra("notification_message")
+        val titleView: TextView = findViewById(R.id.titleTextView)
+        val messageView: TextView = findViewById(R.id.messageTextView)
 
-        Log.d(TAG, "⭐ Received - Title: $title, Message: $message")
+        // Get values from intent
+        val title = intent?.getStringExtra("notification_title") ?: "Default Title"
+        val message = intent?.getStringExtra("notification_message") ?: "Default Message"
 
-        findViewById<TextView>(R.id.titleTextView).text = title
-        findViewById<TextView>(R.id.messageTextView).text = message
+        Log.d(TAG, "⭐ Setting title: $title")
+        Log.d(TAG, "⭐ Setting message: $message")
 
+        titleView.text = title
+        titleView.visibility = View.VISIBLE
+
+        messageView.text = message
+        messageView.visibility = View.VISIBLE
+
+        // Set action bar properties separately
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setTitle("Alert Details")
+    }
 
-        // Handle back press
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // Just finish this activity, let the system handle back stack
-                finishAfterTransition()
-            }
-        })
+    override fun onResume() {
+        super.onResume()
+        window.decorView.invalidate()
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        // Use finishAfterTransition for smoother navigation
-        finishAfterTransition()
+        navigateUp()
         return true
+    }
+
+    private fun navigateUp() {
+        val upIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(upIntent)
+        finish()
     }
 }

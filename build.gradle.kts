@@ -15,3 +15,4 @@ buildscript {
         classpath(libs.google.services)
     }
 }
+val sourceCompatibility by extra(JavaVersion.VERSION_17)

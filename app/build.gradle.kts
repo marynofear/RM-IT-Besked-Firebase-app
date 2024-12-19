@@ -38,11 +38,11 @@ android {
 
 dependencies {
     // Use stable versions of AndroidX Core
-    implementation("androidx.core:core-ktx:1.12.0")  // Changed from 1.15.0 to stable version
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.core:core-ktx:1.15.0")  // Changed from 1.15.0 to stable version
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
@@ -50,12 +50,12 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
 
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     //azure
     implementation ("com.microsoft.azure:notification-hubs-android-sdk:2.0.0") // Den rigtige. Efter ændring virker det.
     // implementation ("com.microsoft.azure:notification-hubs-android-sdk-fcm:1.1.4")
-    implementation ("androidx.appcompat:appcompat:1.4.1")
+    implementation ("androidx.appcompat:appcompat:1.7.0")
     implementation ("com.android.volley:volley:1.2.1")
 
 

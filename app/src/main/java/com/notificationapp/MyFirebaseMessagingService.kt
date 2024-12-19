@@ -25,7 +25,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "🔔 onMessageReceived triggered")
+        Log.d(TAG, "Message data: ${remoteMessage.data}")
+        Log.d(TAG, "Message notification: ${remoteMessage.notification}")
 
+        // First priority: Check for data message
+        if (remoteMessage.data.isNotEmpty()) {
+            val title = remoteMessage.data["title"] ?: remoteMessage.data["notification_title"]
+            val message = remoteMessage.data["message"] ?: remoteMessage.data["notification_message"]
+
+            if (title != null && message != null) {
+                showNotification(title, message)
+                return
+            }
+        }
+
+        // Fallback: Handle notification payload
         val notificationTitle = remoteMessage.notification?.title
         val notificationBody = remoteMessage.notification?.body
 
@@ -35,30 +49,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun showNotification(title: String, message: String) {
-        Log.d(TAG, "⭐ Building notification with title: $title")
-
-        // Create main activity intent as base
-        val mainIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            action = Intent.ACTION_MAIN
-            addCategory(Intent.CATEGORY_LAUNCHER)
-        }
-
-        // Create detail activity intent
-        val detailIntent = Intent(this, MessageDetailActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        val intent = Intent(this, MessageDetailActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("notification_title", title)
             putExtra("notification_message", message)
         }
 
-        // Create an array of intents for the synthetic back stack
-        val intents = arrayOf(mainIntent, detailIntent)
-
-        // Create pending intent with the synthetic back stack
-        val pendingIntent = PendingIntent.getActivities(
+        val pendingIntent = PendingIntent.getActivity(
             this,
-            System.currentTimeMillis().toInt(),
-            intents,
+            0,  // Fixed request code instead of timestamp
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -74,10 +76,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = System.currentTimeMillis().toInt()
-        notificationManager.notify(notificationId, notification)
-        Log.d(TAG, "⭐ Notification shown with ID: $notificationId")
+        notificationManager.notify(1, notification)  // Fixed notification ID
     }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

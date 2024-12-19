@@ -18,13 +18,14 @@
         <activity
             android:name=".MessageDetailActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".MainActivity" />
+            android:taskAffinity=""
+            android:parentActivityName=".MainActivity"
+            android:excludeFromRecents="true" />
 
         <activity
             android:name=".MainActivity"
-            android:launchMode="singleTask"
-            android:clearTaskOnLaunch="false"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
