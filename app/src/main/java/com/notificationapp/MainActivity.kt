@@ -39,7 +39,15 @@ class MainActivity : AppCompatActivity() {
 
         notificationHub = NotificationHub(this)
 
-        if (intent?.action == Intent.ACTION_MAIN) {
+        // Check if we were launched from a notification
+        if (intent?.extras?.containsKey("title") == true) {
+            // Launch MessageDetailActivity with the notification data
+            val detailIntent = Intent(this, MessageDetailActivity::class.java).apply {
+                putExtra("title", intent.getStringExtra("title"))
+                putExtra("body", intent.getStringExtra("body"))
+            }
+            startActivity(detailIntent)
+        } else if (intent?.action == Intent.ACTION_MAIN) {
             checkNotificationPermission()
         }
     }

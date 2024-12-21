@@ -3,7 +3,6 @@ package com.notificationapp
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
@@ -14,7 +13,6 @@ class MessageDetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(R.style.Theme_NotificationApp)
         setContentView(R.layout.activity_message_detail)
 
         Log.d(TAG, "⭐ onCreate - Started")
@@ -22,23 +20,19 @@ class MessageDetailActivity : AppCompatActivity() {
         val titleView: TextView = findViewById(R.id.titleTextView)
         val messageView: TextView = findViewById(R.id.messageTextView)
 
-        // Get values from intent
-        val title = intent?.getStringExtra("notification_title") ?: "Default Title"
-        val message = intent?.getStringExtra("notification_message") ?: "Default Message"
+        // Update to use the correct keys from the intent
+        val title = intent?.getStringExtra("title") ?: "Default Title"
+        val message = intent?.getStringExtra("body") ?: "Default Message"
 
         Log.d(TAG, "⭐ Setting title: $title")
         Log.d(TAG, "⭐ Setting message: $message")
 
         titleView.text = title
-        titleView.visibility = View.VISIBLE
-
         messageView.text = message
-        messageView.visibility = View.VISIBLE
 
-        // Set action bar properties separately
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setTitle("Alert Details")
     }
+
 
     override fun onResume() {
         super.onResume()

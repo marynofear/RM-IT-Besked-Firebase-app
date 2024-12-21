@@ -17,10 +17,7 @@
 
         <activity
             android:name=".MessageDetailActivity"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
-            android:parentActivityName=".MainActivity"
-            android:excludeFromRecents="true" />
+            android:exported="false"/>
 
         <activity
             android:name=".MainActivity"

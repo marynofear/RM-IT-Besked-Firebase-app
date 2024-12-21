@@ -28,6 +28,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Message data: ${remoteMessage.data}")
         Log.d(TAG, "Message notification: ${remoteMessage.notification}")
 
+        Log.d(TAG, "⭐⭐ From: ${remoteMessage.from}")
+
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d(TAG, "⭐⭐ Message data payload: ${remoteMessage.data}")
+        }
+
+
         // First priority: Check for data message
         if (remoteMessage.data.isNotEmpty()) {
             val title = remoteMessage.data["title"] ?: remoteMessage.data["notification_title"]
@@ -51,10 +58,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun showNotification(title: String, message: String) {
         val intent = Intent(this, MessageDetailActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra("notification_title", title)
-            putExtra("notification_message", message)
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("title", title)  // Match the key from FCM
+            putExtra("body", message)  // Match the key from FCM
         }
 
         val pendingIntent = PendingIntent.getActivity(

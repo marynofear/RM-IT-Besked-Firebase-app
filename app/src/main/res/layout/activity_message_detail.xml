@@ -3,27 +3,30 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@android:color/white"
     android:padding="16dp">
+
+    <!-- Debug View -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DEBUG TEXT"
+        android:textSize="30sp"
+        android:textColor="#FF0000"
+        android:background="#FFFF00"
+        android:padding="16dp"/>
 
     <TextView
         android:id="@+id/titleTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Default Title"
-        android:textColor="@android:color/black"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp"
-        android:background="@android:color/white"/>
+        android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/messageTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Default Message"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:background="@android:color/white"/>
+        android:textSize="16sp"/>
 
 </LinearLayout>
