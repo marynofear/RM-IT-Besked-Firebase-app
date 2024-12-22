@@ -10,12 +10,24 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import java.util.LinkedList
+import java.util.Queue
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val TAG = "FCMService"
         private const val CHANNEL_ID = "critical_it_alerts"
+        private const val GROUP_KEY = "com.notificationapp.NOTIFICATIONS"
+        private const val MAX_NOTIFICATIONS = 2
     }
+
+    private val notificationQueue: Queue<NotificationInfo> = LinkedList()
+
+    data class NotificationInfo(
+        val id: Int,
+        val title: String,
+        val message: String
+    )
 
     override fun onCreate() {
         super.onCreate()
@@ -25,66 +37,89 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "🔔 onMessageReceived triggered")
-        Log.d(TAG, "Message data: ${remoteMessage.data}")
-        Log.d(TAG, "Message notification: ${remoteMessage.notification}")
 
-        Log.d(TAG, "⭐⭐ From: ${remoteMessage.from}")
-
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "⭐⭐ Message data payload: ${remoteMessage.data}")
-        }
-
-
-        // First priority: Check for data message
-        if (remoteMessage.data.isNotEmpty()) {
-            val title = remoteMessage.data["title"] ?: remoteMessage.data["notification_title"]
-            val message = remoteMessage.data["message"] ?: remoteMessage.data["notification_message"]
-
-            if (title != null && message != null) {
-                showNotification(title, message)
-                return
+        try {
+            if (remoteMessage.data.isNotEmpty()) {
+                handleDataMessage(remoteMessage)
+            } else {
+                remoteMessage.notification?.let { notification ->
+                    showNotification(
+                        notification.title ?: "New Message",
+                        notification.body ?: "No content"
+                    )
+                }
             }
-        }
-
-        // Fallback: Handle notification payload
-        val notificationTitle = remoteMessage.notification?.title
-        val notificationBody = remoteMessage.notification?.body
-
-        if (notificationTitle != null && notificationBody != null) {
-            showNotification(notificationTitle, notificationBody)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error processing message", e)
         }
     }
 
+    private fun handleDataMessage(remoteMessage: RemoteMessage) {
+        val title = remoteMessage.data["title"] ?: "New Message"
+        val message = remoteMessage.data["body"]
+            ?: remoteMessage.data["message"]
+            ?: "No content"
+
+        showNotification(title, message)
+    }
+
     private fun showNotification(title: String, message: String) {
+        try {
+            val notificationId = System.currentTimeMillis().toInt()
+
+            // Add new notification to queue
+            notificationQueue.offer(NotificationInfo(notificationId, title, message))
+
+            // Remove oldest if we exceed MAX_NOTIFICATIONS
+            if (notificationQueue.size > MAX_NOTIFICATIONS) {
+                val removedNotification = notificationQueue.poll()
+                removedNotification?.let {
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancel(it.id)
+                }
+            }
+
+            // Show notifications for all items in queue
+            notificationQueue.forEach { notificationInfo ->
+                showSingleNotification(notificationInfo)
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing notification", e)
+        }
+    }
+
+    private fun showSingleNotification(notificationInfo: NotificationInfo) {
         val intent = Intent(this, MessageDetailActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("title", title)  // Match the key from FCM
-            putExtra("body", message)  // Match the key from FCM
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("title", notificationInfo.title)
+            putExtra("body", notificationInfo.message)
+            putExtra("notification_id", notificationInfo.id)
         }
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,  // Fixed request code instead of timestamp
+            notificationInfo.id,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText(message)
+            .setContentTitle(notificationInfo.title)
+            .setContentText(notificationInfo.message)
             .setAutoCancel(true)
+            .setOngoing(true)
+            .setGroup(GROUP_KEY)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationInfo.message))
             .build()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, notification)  // Fixed notification ID
+        notificationManager.notify(notificationInfo.id, notification)
     }
-
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -100,7 +135,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
-            Log.d(TAG, "Notification channel created")
         }
     }
 

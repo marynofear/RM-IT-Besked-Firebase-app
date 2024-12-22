@@ -1,13 +1,14 @@
 package com.notificationapp
 
-import android.content.Context  // Changed from Activity import
+import android.content.Context
 import android.util.Log
 import com.microsoft.windowsazure.messaging.NotificationHub as AzureNotificationHub
 
-class NotificationHub(context: Context) {  // Changed from Activity to Context
+class NotificationHub(context: Context) {
     companion object {
         private const val TAG = "NotificationHub"
         private const val FCM_V1_TAG = "fcmv1"
+        private const val MAX_RETRIES = 3
     }
 
     private val hub: AzureNotificationHub
@@ -19,7 +20,7 @@ class NotificationHub(context: Context) {  // Changed from Activity to Context
             hub = AzureNotificationHub(
                 NotificationSettings.HUB_NAME,
                 NotificationSettings.HUB_LISTEN_CONNECTION_STRING,
-                context.applicationContext  // This remains the same
+                context.applicationContext
             )
 
             Log.d(TAG, "Azure Notification Hub initialized successfully")
@@ -31,15 +32,36 @@ class NotificationHub(context: Context) {  // Changed from Activity to Context
 
     fun registerWithNotificationHubs(fcmToken: String) {
         Thread {
-            try {
-                Log.d(TAG, "Registering with Azure Notification Hub...")
-                Log.d(TAG, "FCM Token: ${fcmToken.take(10)}...")
+            var attempt = 0
+            var success = false
 
-                val registrationId = hub.register(fcmToken, FCM_V1_TAG)
-                Log.d(TAG, "Registration successful. ID: $registrationId")
+            while (attempt < MAX_RETRIES && !success) {
+                try {
+                    Log.d(TAG, "Registering with Azure Notification Hub... Attempt ${attempt + 1}")
+                    Log.d(TAG, "FCM Token: ${fcmToken.take(10)}...")
 
-            } catch (e: Exception) {
-                Log.e(TAG, "Registration failed", e)
+                    val registrationId = hub.register(fcmToken, FCM_V1_TAG)
+                    Log.d(TAG, "Registration successful. ID: $registrationId")
+                    success = true
+
+                } catch (e: Exception) {
+                    attempt++
+                    Log.e(TAG, "Registration attempt $attempt failed", e)
+
+                    if (attempt < MAX_RETRIES) {
+                        val delayMs = 1000L * attempt  // Simple linear backoff
+                        try {
+                            Thread.sleep(delayMs)
+                        } catch (ie: InterruptedException) {
+                            Log.e(TAG, "Retry delay interrupted", ie)
+                            break
+                        }
+                    }
+                }
+            }
+
+            if (!success) {
+                Log.e(TAG, "All registration attempts failed")
             }
         }.start()
     }

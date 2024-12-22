@@ -15,18 +15,31 @@ import com.google.firebase.messaging.FirebaseMessaging
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
+        private const val MAX_RETRIES = 3
     }
 
     private lateinit var notificationHub: NotificationHub
+    private var fcmTokenRetryCount = 0
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT).show()
-            initializeFCM()
-        } else {
-            Toast.makeText(this, "FCM requires notification permission", Toast.LENGTH_SHORT).show()
+        when {
+            isGranted -> {
+                Log.d(TAG, "Notification permission granted")
+                Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT).show()
+                initializeFCM()
+            }
+            !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                Log.d(TAG, "Notification permission denied with 'Don't ask again'")
+                Toast.makeText(this,
+                    "Please enable notifications in app settings for full functionality",
+                    Toast.LENGTH_LONG).show()
+            }
+            else -> {
+                Log.d(TAG, "Notification permission denied")
+                Toast.makeText(this, "FCM requires notification permission", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -37,18 +50,12 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "⭐ onCreate - Started")
         logIntentDetails(intent)
 
-        notificationHub = NotificationHub(this)
-
-        // Check if we were launched from a notification
-        if (intent?.extras?.containsKey("title") == true) {
-            // Launch MessageDetailActivity with the notification data
-            val detailIntent = Intent(this, MessageDetailActivity::class.java).apply {
-                putExtra("title", intent.getStringExtra("title"))
-                putExtra("body", intent.getStringExtra("body"))
-            }
-            startActivity(detailIntent)
-        } else if (intent?.action == Intent.ACTION_MAIN) {
-            checkNotificationPermission()
+        try {
+            notificationHub = NotificationHub(this)
+            handleIntent(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing NotificationHub", e)
+            Toast.makeText(this, "Error initializing notification system", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -57,6 +64,37 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "⭐ onNewIntent called")
         logIntentDetails(intent)
         setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        when {
+            intent?.extras?.containsKey("title") == true -> {
+                Log.d(TAG, "Handling notification intent")
+                launchMessageDetail(intent)
+            }
+            intent?.action == Intent.ACTION_MAIN -> {
+                Log.d(TAG, "Handling main action")
+                checkNotificationPermission()
+            }
+            else -> {
+                Log.d(TAG, "No specific action to handle")
+                checkNotificationPermission()
+            }
+        }
+    }
+
+    private fun launchMessageDetail(intent: Intent) {
+        try {
+            val detailIntent = Intent(this, MessageDetailActivity::class.java).apply {
+                putExtra("title", intent.getStringExtra("title"))
+                putExtra("body", intent.getStringExtra("body"))
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            startActivity(detailIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error launching message detail", e)
+        }
     }
 
     private fun logIntentDetails(intent: Intent?) {
@@ -94,13 +132,35 @@ class MainActivity : AppCompatActivity() {
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Log.e(TAG, "⭐ Fetching FCM registration token failed", task.exception)
+                    handleFCMTokenError()
                     return@addOnCompleteListener
                 }
 
                 task.result?.let { token ->
                     Log.d(TAG, "⭐ FCM token received: ${token.take(10)}...")
+                    fcmTokenRetryCount = 0
                     notificationHub.registerWithNotificationHubs(token)
                 }
             }
+    }
+
+    private fun handleFCMTokenError() {
+        if (fcmTokenRetryCount < MAX_RETRIES) {
+            fcmTokenRetryCount++
+            Log.d(TAG, "Retrying FCM token fetch (Attempt $fcmTokenRetryCount)")
+            android.os.Handler(mainLooper).postDelayed({
+                initializeFCM()
+            }, 1000L * fcmTokenRetryCount)
+        } else {
+            Log.e(TAG, "Failed to fetch FCM token after $MAX_RETRIES attempts")
+            Toast.makeText(this,
+                "Failed to initialize notification system. Please try again later.",
+                Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "⭐ onDestroy called")
     }
 }

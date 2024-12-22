@@ -16,13 +16,13 @@ class MessageDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_message_detail)
 
         Log.d(TAG, "⭐ onCreate - Started")
+        Log.d(TAG, "Intent extras: ${intent?.extras?.keySet()?.joinToString()}")
 
         val titleView: TextView = findViewById(R.id.titleTextView)
         val messageView: TextView = findViewById(R.id.messageTextView)
 
-        // Update to use the correct keys from the intent
-        val title = intent?.getStringExtra("title") ?: "Default Title"
-        val message = intent?.getStringExtra("body") ?: "Default Message"
+        val title = intent?.getStringExtra("title") ?: "No Title Available"
+        val message = intent?.getStringExtra("body") ?: "No Message Available"
 
         Log.d(TAG, "⭐ Setting title: $title")
         Log.d(TAG, "⭐ Setting message: $message")
@@ -32,7 +32,6 @@ class MessageDetailActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
-
 
     override fun onResume() {
         super.onResume()
