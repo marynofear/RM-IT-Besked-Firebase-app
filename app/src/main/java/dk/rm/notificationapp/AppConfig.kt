@@ -1,5 +1,5 @@
-// app/src/main/java/com/notificationapp/MainActivity.kt 14.09.25 12:34
-package com.notificationapp
+// app/src/main/java/dk/rm/notificationapp/MainActivity.kt 15.09.25 12:40
+package dk.rm.notificationapp
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -23,9 +23,8 @@ class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) initializeFCM() else {
-            Toast.makeText(this, "Tillad notifikationer i indstillinger", Toast.LENGTH_LONG).show()
-        }
+        if (isGranted) initializeFCM()
+        else Toast.makeText(this, "Tillad notifikationer i indstillinger", Toast.LENGTH_LONG).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
